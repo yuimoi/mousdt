@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <!-- import CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link href="bootstrap.min.css" rel="stylesheet">
+
+</head>
+
+<body>
+<div id="app">
+    <div class="container-sm text-center" style="max-width: 600px; ">
+        <h1>{{ t['checkout_counter'] }}</h1>
+        <el-card class="box-card" v-loading="isLoading">
+            <div style="text-align: center;"><strong style="font-size: 2rem;">{{ order_price }} {{ currency }}</strong>
+            </div>
+
+            <img style="width: 100%" :src="wallet_address ? '/static/QR_code/' + wallet_address + '.png' : ''"/>
+
+            <div style="margin-top: 15px;" @click="copyWalletAddress" class="clipboard"
+                 data-clipboard-target="#wallet_address">
+                <el-input id="wallet_address" :value="wallet_address" class="input-with-select" readonly>
+                    <el-button slot="append" icon="el-icon-copy-document">{{ t['copy'] }}</el-button>
+                </el-input>
+            </div>
+
+
+            <div style="text-align: center;"><strong style="font-size: 2rem;">{{ t['paid'] }} {{ paid_price }}
+                / {{ order_price }}</strong></div>
+            <div style="text-align: center;"><strong
+                    style="font-size: 2rem;">{{ t['remaining_time'] }} {{ remain_time | parseTime }}</strong>
+            </div>
+
+            <div style="text-align: left;padding-left: 60px;"><span><strong>{{ t['network'] }}: {{ network }}</strong></span></div>
+
+            <div style="text-align: left;padding-left: 60px;"><span><strong>{{ t['address'] }}: {{ wallet_address }}</strong></span></div>
+
+            <div style="text-align: left;padding-left: 60px;"><span><strong>{{ t['total_amount'] }}: {{ order_price }} {{ currency }}</strong></span></div>
+            <br/>
+
+            <span>{{ t['tips2'] }}</span>
+
+
+            <br/><br/>
+
+            <span>{{ t['tips1'] }}</span>
+
+        </el-card>
+        <div style="padding: 10px">
+            <el-select
+                    v-model="lang"
+                    placeholder="{{ t['please_select'] }}"
+                    @change="langChange"
+            >
+                <el-option
+                        v-for="item in langOptions"
+                        :key="item.value"
+                        :label="item.label"
+                        :value="item.value"
+                >
+                </el-option>
+            </el-select>
+        </div>
+
+    </div>
+
+
+    <el-dialog
+            :visible.sync="dialogVisible"
+            width="30%">
+        <span>{{ t['order_timeout'] }}</span>
+        <span slot="footer" class="dialog-footer">
+			<el-button @click="dialogVisible = false">{{ t['cancel'] }}</el-button>
+			<el-button type="primary" @click="dialogVisible = false">{{ t['confirm'] }}</el-button>
+		  </span>
+    </el-dialog>
+
+
+</div>
+</body>
+<script src="vue.js"></script>
+<script src="vue-router.js"></script>
+<script src="element-ui.js"></script>
+<script src="locale/en.js"></script>
+<script src="locale/zh.js"></script>
+<script src="locale/ja.js"></script>
+<script src="axios.min.js"></script>
+<script src="clipboard.min.js"></script>
+
+<script>
+    const langOptions = [
+        {value: 'zh', label: '中文'},
+        {value: 'en', label: 'English'},
+        {value: 'ja', label: '日本語'}
+    ]
+
+
+    new ClipboardJS('.clipboard');
+
+    var router = new VueRouter({
+        mode: 'history',
+        routes: []
+    });
+
+    new Vue({
+        router,
+        el: '#app',
+        data: function () {
+            return {
+                currency: 'USDT',
+                lang: 'en',
+                langOptions: langOptions,
+                dialogVisible: false,
+                network: undefined,
+                order_price: undefined,
+                wallet_address: undefined,
+                paid_price: 0,
+                remain_time: 0,
+                token: this.$route.query.token,
+                timer: null,
+                order_check_interval: 5,
+                isLoading: false,
+                t: ELEMENT.lang['en']['el']
+            }
+        },
+        created() {
+            this.isLoading = true;
+            this.check_order();
+            this.timer = setInterval(() => {
+                if (this.remain_time % this.order_check_interval == 0) {
+                    this.check_order();
+                }
+                if(this.remain_time <=0 ){
+                    this.timeout()
+                }
+
+                this.remain_time = this.remain_time - 1;
+
+            }, 1000);
+            const navLang = navigator.language || navigator.userLanguage;
+
+            this.lang = 'en'
+            this.t = ELEMENT.lang['en']['el']
+            if(navLang.includes("zh")){
+                this.lang = 'zh'
+                this.t = ELEMENT.lang['zh']['el']
+
+            }
+            if(navLang.includes("ja")){
+                this.lang = 'ja'
+                this.t = ELEMENT.lang['ja']['el']
+            }
+
+
+        },
+        methods: {
+            check_order() {
+                axios({
+                    method: 'post',
+                    url: '/api/pay/check_order',
+                    data: {
+                        token: this.token,
+                    }
+                }).then((response) => {
+                    let status = response.data.data.status;
+                    if (status == 1) {
+                        let return_url = response.data.data.return_url;
+                        window.location.href = return_url;
+                    }
+                    if (status == -1) {
+                        this.timeout()
+                    }
+
+                    let transfer_items = response.data.data.transfer_items;
+                    this.paid_price = response.data.data.transfer_items.map(x => x.price).reduce((a, b) => a + b, 0);
+                    this.wallet_address = response.data.data.wallet_address;
+                    this.network = response.data.data.network;
+                    this.order_price = response.data.data.order_price;
+                    this.remain_time = response.data.data.remain_time;
+
+                    this.isLoading = false;
+                }).catch((error) => {
+
+                    // clearInterval(this.timer);
+
+                })
+            },
+            copyWalletAddress(data) {
+                console.log(data)
+                this.$message('复制成功');
+            },
+            langChange(data) {
+                this.lang = data
+                this.t = ELEMENT.lang[data]['el']
+            },
+            timeout(){
+                clearInterval(this.timer);
+                let message = response.data.msg;
+                this.$message(message);
+                this.dialogVisible = true;
+                this.isLoading = true;
+                this.wallet_address = undefined;
+            }
+        },
+        filters: {
+            parseTime(input_seconds) {
+
+                minutes = new Date(input_seconds * 1000).toISOString().substring(14, 16)
+                seconds = new Date(input_seconds * 1000).toISOString().substring(17, 19)
+                return minutes + ':' + seconds
+            }
+        }
+
+    })
+</script>
+
+</html>
