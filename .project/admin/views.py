@@ -196,7 +196,7 @@ def wallet_refresh():
         except Exception as e:
             return restful.params_err(message=str(e))
     else:
-        wallet_list = WalletModel.query.filter(WalletModel.balance != 0).all()
+        wallet_list = WalletModel.query.filter( (WalletModel.balance != 0) | (WalletModel.fee_balance != 0) ).all()
         for wallet in wallet_list:
             try:
                 refresh_wallet(wallet, force_refresh=force_refresh)

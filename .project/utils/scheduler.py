@@ -58,8 +58,8 @@ def check_job():
         start_block_timestamp = int(cache.get('end_block_timestamp'))
     end_block_timestamp = int((time.time() - config.wallet_listener_interval) * 1000)
 
-    # 程序启动后，存在未完成订单，且api成功执行过一次，且之后api失效过久的时候，会导致查询时间范围过大，往前追溯最多一分钟
-    if end_block_timestamp - start_block_timestamp > 60 * 1000:
+    # 程序启动后，存在未完成订单，且api成功执行过一次，且之后api失效过久的时候，会导致查询时间范围过大，往前追溯最多2分钟
+    if end_block_timestamp - start_block_timestamp > 120 * 1000:
         start_block_timestamp = int((end_block_timestamp - 60) * 1000)
 
     result = db.session.query(OrderModel.network).group_by(OrderModel.network).all()
@@ -81,7 +81,14 @@ def check_job():
 
     # 对比数据库是否有对应的钱包地址
     address_list = [temp.to_address for temp in transfer_list]
-    wallet_to_update_list = WalletModel.query.filter(WalletModel.address.in_(address_list)).all()
+
+    # 一次性执行太多会报错
+    wallet_to_update_list = []
+    chunk_size = 500
+    for i in range(0, len(address_list), chunk_size):
+        chunk = address_list[i:i + chunk_size]
+        wallet_to_update_list_temp = WalletModel.query.filter(WalletModel.address.in_(chunk)).all()
+        wallet_to_update_list += wallet_to_update_list_temp
 
     if not wallet_to_update_list:
         return None

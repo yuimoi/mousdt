@@ -17,3 +17,4 @@ SQLAlchemy_serializer==1.4.1
 tronpy==0.2.6
 Werkzeug==2.0.3
 Flask==2.0.3
+uwsgi==2.0.21

@@ -2,8 +2,10 @@ import os
 from cli import register_cli
 from create_app import create_app
 from first_run import first_run
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 app = create_app()
+app.wsgi_app = ProxyFix(app.wsgi_app)
 register_cli(app)
 
 # FLASK_ENV判断是否是调试环境, FLASK_DEBUG判断pycharm是否关闭reloader运行,WERKZEUG_RUN_MAIN判断是否是reloader

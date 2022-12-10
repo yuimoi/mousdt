@@ -75,5 +75,10 @@ def first_run(app):
     from utils.scheduler import start_scheduler
     start_scheduler()
     scheduler.start()
+    print(bordered_text(
+"""_  _ ____ _  _ ____ ___  ___ 
+|\/| |  | |  | [__  |  \  |  
+|  | |__| |__| ___] |__/  |  
 
+"""))
     return app

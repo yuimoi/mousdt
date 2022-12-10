@@ -80,7 +80,7 @@
 
 </div>
 </body>
-<script src="vue.js"></script>
+<script src="vue.min.js"></script>
 <script src="vue-router.js"></script>
 <script src="element-ui.js"></script>
 <script src="locale/en.js"></script>
@@ -132,7 +132,7 @@
                 if (this.remain_time % this.order_check_interval == 0) {
                     this.check_order();
                 }
-                if(this.remain_time <=0 ){
+                if(this.remain_time <= 10 ){
                     this.timeout()
                 }
 
@@ -182,7 +182,6 @@
 
                     this.isLoading = false;
                 }).catch((error) => {
-
                     // clearInterval(this.timer);
 
                 })
