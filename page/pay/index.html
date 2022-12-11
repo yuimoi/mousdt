@@ -183,7 +183,7 @@
                     this.isLoading = false;
                 }).catch((error) => {
                     // clearInterval(this.timer);
-
+                    this.$message('error');
                 })
             },
             copyWalletAddress(data) {
@@ -196,8 +196,6 @@
             },
             timeout(){
                 clearInterval(this.timer);
-                let message = response.data.msg;
-                this.$message(message);
                 this.dialogVisible = true;
                 this.isLoading = true;
                 this.wallet_address = undefined;
