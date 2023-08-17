@@ -1,3 +1,7 @@
+# 测试项目，仅供参考和学习，勿用于生产环境
+
+**NOTE: 本项目心血来潮写的，再次回看发现存在很多问题，代码仅供学习和交流，如有需要可以来看看我的[恰饭线上版](https://mopay.vip/)。**
+
 # moUSDT
 一个使用Flask开发的USDT收款平台，通过HTTP接口进行订单的发起及回调，自带网页管理后台管理及查询订单、钱包、及链上交易，后台管理页面使用[vue-element-admin](https://github.com/PanJiaChen/vue-element-admin)搭建
 
