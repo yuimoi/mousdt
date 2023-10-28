@@ -64,11 +64,6 @@ static      # 静态文件
 ### 清除所有运行数据（谨慎运行，请事先将钱包等重要数据下载到本地）
     python3 -m flask clear_data
 
-# 有问题反馈
-在使用中有任何问题，欢迎反馈给我，可以用以下联系方式跟我交流
-* tg: [@nulllllllll](https://t.me/nulllllllll)
-
-
 # 感激
 灵感来自以下的项目
 
